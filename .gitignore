@@ -12,6 +12,7 @@ ENV/
 .DS_Store
 benchmarks/results*.json
 benchmarks/qwen_needle_demo*.json
+benchmarks/qwen_benchmark*.json
 assets/promo/*.mp4
 assets/promo/*.mov
 assets/promo/*.gif
