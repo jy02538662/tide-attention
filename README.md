@@ -18,7 +18,7 @@ No NVIDIA GPU is required for the default demo. No model download. No API key.
 ```bash
 cd tide_attention
 pip install -r requirements.txt
-python scripts/visual_demo.py
+py -3 scripts/visual_demo.py
 ```
 
 What you should see:
@@ -38,7 +38,7 @@ Conflict memory:
 If you want the small-model harness later:
 
 ```bash
-python scripts/qwen_needle_demo.py --dry-run --context-len 512
+py -3 scripts/qwen_needle_demo.py --dry-run --context-len 512
 ```
 
 It shows the same story without downloading Qwen:
@@ -46,6 +46,18 @@ It shows the same story without downloading Qwen:
 ```text
 Needle / clear memory          -> yang_sparse, no deep retrieve
 Multi-Needle / conflict memory -> yin_full, deep retrieve
+```
+
+If you want the fastest real-model-shaped harness first:
+
+```bash
+py -3 scripts/qwen_needle_demo.py --dry-run --quick --only clear --context-len 256
+```
+
+For a true Qwen run, start with the same quick settings and then remove `--dry-run`:
+
+```bash
+py -3 scripts/qwen_needle_demo.py --quick --only clear --context-len 256 --device cpu
 ```
 
 ## Shareable one-liner
@@ -71,7 +83,7 @@ The core idea is to treat contradictions as **defects**. When memory is coherent
 To generate a browser-friendly promo page and poster:
 
 ```bash
-python scripts/make_promo_video.py
+py -3 scripts/make_promo_video.py
 ```
 
 This writes:
@@ -87,7 +99,7 @@ Open the HTML file in a browser and screen-record it if you want an MP4 or GIF. 
 ## Controlled claim-gate
 
 ```bash
-python benchmarks/claim_eval.py --trials 6 --seq-len 256 --lengths 64,128,256
+py -3 benchmarks/claim_eval.py --trials 6 --seq-len 256 --lengths 64,128,256
 ```
 
 Latest local snapshot from the controlled offline harness:
@@ -180,36 +192,38 @@ Tide Attention beats GPT/Claude/Kimi.
 
 To make stronger claims, run public frozen-model suites such as Needle-in-a-Haystack, RULER, LongBench, and Multi-Needle Conflict on the same backbone. See [EVAL_PROTOCOL.md](EVAL_PROTOCOL.md).
 
-## Optional: Qwen2.5-0.5B Needle demo
+## Qwen2.5-0.5B real-model demo
 
 The repository includes a small real-LM harness for `Qwen/Qwen2.5-0.5B-Instruct`.
 
-Dry run first, with no model download:
+Fast dry run, with no model download:
 
 ```bash
-python scripts/qwen_needle_demo.py --dry-run --context-len 512
+py -3 scripts/qwen_needle_demo.py --dry-run --quick --only clear --context-len 256
 ```
 
-Real Qwen run, if you have enough RAM/VRAM and network access:
+Fast real Qwen run on CPU:
 
 ```bash
-python scripts/qwen_needle_demo.py --context-len 512 --device cpu
+py -3 scripts/qwen_needle_demo.py --quick --only clear --context-len 256 --device cpu
+py -3 scripts/qwen_needle_demo.py --quick --only conflict --context-len 256 --device cpu
 ```
 
-If CUDA is available, the script uses it by default:
+Latest real Qwen2.5-0.5B-Instruct CPU snapshot:
 
-```bash
-python scripts/qwen_needle_demo.py --context-len 1024
-```
+| Case | Tide mode | Deep retrieve | Answer | FLOPs vs full |
+|---|---|---:|---|---:|
+| Needle / clear memory | `yang_sparse` | no | `PHOENIX` | 0.191x |
+| Multi-Needle / conflict memory | `yin_full` | yes | `PHOENIX` | 1.020x |
 
-The demo runs two cases:
+Interpretation:
 
 ```text
-Needle / clear memory          -> expected yang_sparse
-Multi-Needle / conflict memory -> expected yin_full + deep retrieve
+clear memory    -> sparse path, low cost, correct answer
+conflict memory -> full/deep path, contradiction recovery, correct answer
 ```
 
-It writes `benchmarks/qwen_needle_demo.json`.
+This is a small-model demonstration, not a commercial-model comparison.
 
 ## License
 
