@@ -1,0 +1,38 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "dry_run": true,
+  "quick": true,
+  "only": "clear",
+  "device": "cpu",
+  "cases": [
+    {
+      "name": "Needle / clear memory",
+      "memory_mode": "clear",
+      "context_len": 256,
+      "tide_mode": "yang_sparse",
+      "mode_trace": [
+        "yang_sparse"
+      ],
+      "used_deep_retrieve": false,
+      "flops_estimate": 12544.0,
+      "flops_vs_full": 0.19140625,
+      "retrieved_texts": [
+        "The current SECRET_NEEDLE value is PHOENIX.",
+        "Unrelated memory: operators prefer short answers."
+      ],
+      "prompt_chars": 687,
+      "model_answer": "PHOENIX",
+      "hit": true,
+      "elapsed_sec": 0.06027339998399839
+    }
+  ],
+  "boundary": "This is a small-model demo harness. It is not a commercial-model comparison.",
+  "expected_answers": [
+    "PHOENIX",
+    "ORION",
+    "DRAGON",
+    "WOLVES",
+    "ATLAS",
+    "ZEPHYR"
+  ]
+}
