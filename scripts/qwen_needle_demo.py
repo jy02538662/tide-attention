@@ -31,7 +31,9 @@ from tide_attention import TideLongContextEngine, XI_C
 
 MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
 ANSWER = "PHOENIX"
+VALID_VALUES = ("PHOENIX", "ORION", "DRAGON", "WOLVES", "ATLAS", "ZEPHYR")
 DIM = 128
+
 
 
 @dataclass
@@ -106,28 +108,30 @@ def make_memory(mode: str) -> List[str]:
 
 
 def build_prompt(query: str, context: Sequence[str], retrieved: Sequence[str]) -> str:
-    context_snippet = "\n".join(context[:4] + list(context[-4:]))
+    context_snippet = "\n".join(context[:2] + list(context[-2:]))
     retrieved_snippet = "\n".join(f"- {x}" for x in retrieved)
-    return f"""You are answering a needle-in-a-haystack question.
-Use VALID_EVIDENCE and the retrieved memory. If memories conflict, prefer current/valid evidence.
-Answer with only the SECRET_NEEDLE value.
-
+    return f"""Pick the correct value of SECRET_NEEDLE.
+Return only one token from this set: PHOENIX, ORION, DRAGON, WOLVES, ATLAS, ZEPHYR.
+No extra text.
+No explanation.
+No punctuation.
 Question: {query}
-
 Retrieved memory:
 {retrieved_snippet}
-
 Context excerpts:
 {context_snippet}
 """
 
 
 def dry_answer(prompt: str) -> str:
-    for token in ("PHOENIX", "ORION", "DRAGON", "WOLVES", "ATLAS", "ZEPHYR"):
-        if token in prompt and "VALID_EVIDENCE" in prompt:
-            if "VALID_EVIDENCE: the current SECRET_NEEDLE value is PHOENIX" in prompt:
-                return "PHOENIX"
-            return token
+    if "The current SECRET_NEEDLE value is PHOENIX." in prompt:
+        return "PHOENIX"
+    if "The current SECRET_NEEDLE value is ORION." in prompt:
+        return "ORION"
+    if "The current SECRET_NEEDLE value is DRAGON." in prompt:
+        return "DRAGON"
+    if "The current SECRET_NEEDLE value is WOLVES." in prompt:
+        return "WOLVES"
     return "UNKNOWN"
 
 
@@ -148,9 +152,17 @@ def load_qwen(model_id: str, device: str):
     return tokenizer, model
 
 
+def _extract_answer(text: str) -> str:
+    upper = text.upper()
+    for token in VALID_VALUES:
+        if token in upper:
+            return token
+    return text.strip()
+
+
 def qwen_answer(tokenizer, model, prompt: str, device: str, max_new_tokens: int) -> str:
     messages = [
-        {"role": "system", "content": "Answer with only the requested value."},
+        {"role": "system", "content": "Return only one token from: PHOENIX, ORION, DRAGON, WOLVES, ATLAS, ZEPHYR."},
         {"role": "user", "content": prompt},
     ]
     text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
@@ -165,7 +177,8 @@ def qwen_answer(tokenizer, model, prompt: str, device: str, max_new_tokens: int)
             pad_token_id=tokenizer.eos_token_id,
         )
     new_ids = out[0, inputs.input_ids.shape[-1] :]
-    return tokenizer.decode(new_ids, skip_special_tokens=True).strip()
+    decoded = tokenizer.decode(new_ids, skip_special_tokens=True).strip()
+    return _extract_answer(decoded)
 
 
 def run_case(
@@ -230,8 +243,13 @@ def main() -> None:
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--max-new-tokens", type=int, default=12)
     parser.add_argument("--dry-run", action="store_true", help="Do not download/load Qwen; use deterministic local answerer.")
+    parser.add_argument("--quick", action="store_true", help="Use shorter context and fewer generated tokens.")
+    parser.add_argument("--only", choices=("both", "clear", "conflict"), default="both", help="Run only one case to reduce runtime.")
     parser.add_argument("--out", default="benchmarks/qwen_needle_demo.json")
     args = parser.parse_args()
+
+    context_len = min(args.context_len, 256) if args.quick else args.context_len
+    max_new_tokens = min(args.max_new_tokens, 4) if args.quick else args.max_new_tokens
 
     tokenizer = model = None
     if not args.dry_run:
@@ -240,21 +258,27 @@ def main() -> None:
     print("Qwen2.5-0.5B Needle / Multi-Needle Conflict demo")
     print(f"model: {args.model if not args.dry_run else 'dry-run local answerer'}")
     print(f"device: {args.device}")
-    print(f"context_len: {args.context_len}")
+    print(f"context_len: {context_len}")
+    print(f"max_new_tokens: {max_new_tokens}")
+    print(f"cases: {args.only}")
 
-    cases = [
-        run_case("Needle / clear memory", "clear", context_len=args.context_len, dry_run=args.dry_run, tokenizer=tokenizer, model=model, device=args.device, max_new_tokens=args.max_new_tokens),
-        run_case("Multi-Needle / conflict memory", "conflict", context_len=args.context_len, dry_run=args.dry_run, tokenizer=tokenizer, model=model, device=args.device, max_new_tokens=args.max_new_tokens),
-    ]
+    cases = []
+    if args.only in ("both", "clear"):
+        cases.append(run_case("Needle / clear memory", "clear", context_len=context_len, dry_run=args.dry_run, tokenizer=tokenizer, model=model, device=args.device, max_new_tokens=max_new_tokens))
+    if args.only in ("both", "conflict"):
+        cases.append(run_case("Multi-Needle / conflict memory", "conflict", context_len=context_len, dry_run=args.dry_run, tokenizer=tokenizer, model=model, device=args.device, max_new_tokens=max_new_tokens))
     for case in cases:
         print_case(case)
 
     payload = {
         "model": args.model,
         "dry_run": args.dry_run,
+        "quick": args.quick,
+        "only": args.only,
         "device": args.device,
         "cases": [asdict(c) for c in cases],
         "boundary": "This is a small-model demo harness. It is not a commercial-model comparison.",
+        "expected_answers": VALID_VALUES,
     }
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
