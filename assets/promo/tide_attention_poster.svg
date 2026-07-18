@@ -1,0 +1,28 @@
+<svg width="1200" height="675" viewBox="0 0 1200 675" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#081020"/>
+      <stop offset="1" stop-color="#220927"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" x2="1">
+      <stop stop-color="#54d6ff"/>
+      <stop offset="1" stop-color="#ff5cc8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" rx="32" fill="url(#bg)"/>
+  <circle cx="270" cy="140" r="230" fill="#1b4fff" opacity="0.22"/>
+  <circle cx="910" cy="430" r="260" fill="#ff33b8" opacity="0.18"/>
+  <text x="70" y="115" fill="#f8fbff" font-family="Arial, sans-serif" font-size="72" font-weight="800">Tide Attention</text>
+  <text x="74" y="165" fill="#9fb0c7" font-family="Arial, sans-serif" font-size="27">Clear memory stays cheap. Conflicting memory makes the model think harder.</text>
+  <rect x="70" y="218" width="500" height="260" rx="28" fill="#ffffff" opacity="0.08" stroke="#ffffff" stroke-opacity="0.14"/>
+  <text x="105" y="278" fill="#7dffb2" font-family="Arial, sans-serif" font-size="38" font-weight="800">Clear memory</text>
+  <text x="105" y="330" fill="#d7e2f2" font-family="Arial, sans-serif" font-size="25">yang_sparse · shallow retrieve</text>
+  <text x="105" y="415" fill="#7dffb2" font-family="Arial, sans-serif" font-size="54" font-weight="900">0.191× full FLOPs</text>
+  <rect x="630" y="218" width="500" height="260" rx="28" fill="#ffffff" opacity="0.08" stroke="#ffffff" stroke-opacity="0.14"/>
+  <text x="665" y="278" fill="#ff5cc8" font-family="Arial, sans-serif" font-size="38" font-weight="800">Conflict memory</text>
+  <text x="665" y="330" fill="#d7e2f2" font-family="Arial, sans-serif" font-size="25">yin_full · deep retrieve</text>
+  <text x="665" y="415" fill="#ff5cc8" font-family="Arial, sans-serif" font-size="54" font-weight="900">recover valid fact</text>
+  <rect x="70" y="535" width="560" height="54" rx="27" fill="url(#accent)" opacity="0.25"/>
+  <text x="96" y="570" fill="#f8fbff" font-family="Arial, sans-serif" font-size="24" font-weight="700">CPU-friendly v0.1-preview · non-commercial release</text>
+  <text x="805" y="570" fill="#9fb0c7" font-family="Arial, sans-serif" font-size="20">Controlled demo, not commercial-model SOTA claim.</text>
+</svg>
